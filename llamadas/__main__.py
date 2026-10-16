@@ -33,6 +33,7 @@ def main() -> None:
     sp = sub.add_parser("probar-audio", help="Graba unos segundos para comprobar mic y salida")
     sp.add_argument("segundos", nargs="?", type=int, default=5)
     sub.add_parser("dispositivos", help="Lista los dispositivos de audio")
+    sub.add_parser("transcriptor")  # uso interno: proceso de la transcripción en vivo
     args = p.parse_args()
 
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(message)s", datefmt="%H:%M:%S")
@@ -40,7 +41,12 @@ def main() -> None:
         logging.getLogger(ruidoso).setLevel(logging.WARNING)
     cfg = config.cargar()
 
-    if args.comando in (None, "servidor"):
+    if args.comando == "transcriptor":
+        logging.getLogger().setLevel(logging.WARNING)
+        from .vivo import proceso_transcriptor
+        proceso_transcriptor(cfg)
+
+    elif args.comando in (None, "servidor"):
         from .servidor import ejecutar
         ejecutar(cfg)
 
@@ -48,7 +54,8 @@ def main() -> None:
         from .procesar import procesar
         carpeta = _carpeta(cfg, args.reunion)
         if args.comando == "procesar" and args.retranscribir:
-            (carpeta / ".datos" / "transcripcion.json").unlink(missing_ok=True)
+            for archivo in ("transcripcion.json", "vivo.json"):
+                (carpeta / ".datos" / archivo).unlink(missing_ok=True)
         procesar(carpeta, cfg, solo_analizar=args.comando == "analizar")
 
     elif args.comando == "dispositivos":

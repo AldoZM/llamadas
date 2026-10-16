@@ -41,9 +41,11 @@ def dispositivo_mic():
 
 class Grabadora:
     def __init__(self, carpeta: Path, frecuencia: int, grabar_mic: bool,
-                 silenciado: Callable[[], bool], t0: float | None = None, parte: int = 1):
+                 silenciado: Callable[[], bool], t0: float | None = None, parte: int = 1,
+                 al_escribir: Callable[[int, np.ndarray], None] | None = None):
         """`t0`/`parte` permiten continuar una sesión interrumpida: la parte nueva se escribe en
-        archivos aparte (mic-2.wav...), alineada con el reloj de la sesión original."""
+        archivos aparte (mic-2.wav...), alineada con el reloj de la sesión original.
+        `al_escribir(canal, audio)` recibe todo lo que se escribe (p. ej. para transcribir en vivo)."""
         self.carpeta = carpeta
         self.archivos = {c: n if parte == 1 else n.replace(".wav", f"-{parte}.wav")
                          for c, n in NOMBRES.items()}
@@ -51,6 +53,7 @@ class Grabadora:
         self.sr = frecuencia
         self.grabar_mic = grabar_mic
         self.silenciado = silenciado
+        self.al_escribir = al_escribir
         self._cola: queue.Queue = queue.Queue()
         self._parar = threading.Event()
         self._hilos: list[threading.Thread] = []
@@ -115,8 +118,10 @@ class Grabadora:
                 if hueco > tolerancia:
                     _silencio(archivos[canal], hueco, self.sr)
                     escritos[canal] += hueco
+                    self._avisar(canal, np.zeros(hueco, dtype=np.float32))
                 archivos[canal].write(datos)
                 escritos[canal] += len(datos)
+                self._avisar(canal, datos)
             # Igualar ambos canales a la duración real de la sesión.
             total = max(int((time.monotonic() - self.t0) * self.sr), *escritos.values())
             for canal, f in archivos.items():
@@ -125,6 +130,15 @@ class Grabadora:
         finally:
             for f in archivos.values():
                 f.close()
+
+
+    def _avisar(self, canal: int, datos: np.ndarray) -> None:
+        if self.al_escribir:
+            try:
+                self.al_escribir(canal, datos)
+            except Exception:  # nunca debe afectar a la grabación
+                log.exception("Error pasando audio a la transcripción en vivo")
+                self.al_escribir = None
 
 
 def _silencio(archivo: sf.SoundFile, n: int, sr: int) -> None:

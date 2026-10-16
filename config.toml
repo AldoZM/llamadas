@@ -27,6 +27,9 @@ modelo = "large-v3-turbo"
 idioma = "es"
 nombre_yo = "Yo"
 nombre_otros = "Otros"
+# Ir transcribiendo durante la llamada, solo con la CPU que quede libre (prioridad mínima),
+# para que las notas estén listas pocos minutos después de colgar.
+en_vivo = true
 
 [analisis]
 activo = true

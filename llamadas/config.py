@@ -22,6 +22,7 @@ class Config:
     idioma: str | None
     nombre_yo: str
     nombre_otros: str
+    en_vivo: bool
     analisis_activo: bool
     motor: str
     modelo_cli: str
@@ -54,6 +55,7 @@ def cargar() -> Config:
         idioma=trans.get("idioma") or None,
         nombre_yo=trans.get("nombre_yo", "Yo"),
         nombre_otros=trans.get("nombre_otros", "Otros"),
+        en_vivo=bool(trans.get("en_vivo", True)),
         analisis_activo=bool(analisis.get("activo", True)),
         motor=analisis.get("motor", "agy"),
         modelo_cli=analisis.get("modelo_cli", ""),

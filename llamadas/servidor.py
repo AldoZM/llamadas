@@ -20,6 +20,7 @@ from .config import Config
 from .grabadora import SISTEMA, Grabadora, partes
 from .procesar import pendientes, procesar
 from .sesion import Sesion, hms
+from .vivo import TranscriptorVivo
 
 log = logging.getLogger("llamadas")
 # Si el servidor se reinicia a mitad de una llamada, al volver la misma reunión continúa en la
@@ -48,6 +49,7 @@ class Estado:
         self.lock = threading.Lock()
         self.sesion: Sesion | None = None
         self.grabadora: Grabadora | None = None
+        self.vivo: TranscriptorVivo | None = None
         self.cola: queue.Queue[Path] = queue.Queue()
         self.ocupado = False  # procesando una reunión
         self.esperando = 0  # sesiones interrumpidas a la espera de ver si se reanudan
@@ -55,6 +57,10 @@ class Estado:
         threading.Thread(target=self._trabajador, daemon=True, name="procesador").start()
 
     def _trabajador(self) -> None:
+        # Al procesar se usan todos los núcleos, pero con menos prioridad que el resto de la PC
+        # (por si empieza otra llamada). Los hilos del modelo heredan la prioridad de este hilo.
+        if hasattr(os, "setpriority"):
+            os.setpriority(os.PRIO_PROCESS, threading.get_native_id(), 10)
         while True:
             carpeta = self.cola.get()
             self.ocupado = True
@@ -103,9 +109,14 @@ class Estado:
                 sesion = Sesion.nueva(self.cfg.reuniones, ev.plataforma, ev.titulo or "Reunión",
                                       ev.url, ev.silenciado)
                 parte = 1
+            # Al continuar una sesión interrumpida, el final de la parte anterior quedó sin
+            # transcribir: ese caso (raro) se transcribe completo al colgar.
+            vivo = (TranscriptorVivo(sesion.datos, self.cfg, self.cfg.frecuencia)
+                    if self.cfg.en_vivo and parte == 1 else None)
             grabadora = Grabadora(sesion.datos, self.cfg.frecuencia, self.cfg.grabar_mic,
                                   silenciado=lambda: sesion.mic_silenciado,
-                                  t0=sesion._t0 if parte > 1 else None, parte=parte)
+                                  t0=sesion._t0 if parte > 1 else None, parte=parte,
+                                  al_escribir=vivo.alimentar if vivo else None)
             try:
                 grabadora.iniciar()
             except Exception as e:
@@ -113,17 +124,25 @@ class Estado:
                 sesion.errores.append(str(e))
                 sesion.guardar()
                 raise
-            self.sesion, self.grabadora = sesion, grabadora
+            if vivo:
+                try:
+                    vivo.iniciar()
+                except Exception:
+                    log.exception("Sin transcripción en vivo: se transcribirá todo al colgar")
+                    grabadora.al_escribir = vivo = None
+            self.sesion, self.grabadora, self.vivo = sesion, grabadora, vivo
             log.info("⏺️  Grabando «%s» (%s)", sesion.titulo, sesion.plataforma)
             return sesion
 
     def terminar(self, interrumpida: bool = False) -> Sesion | None:
         with self.lock:
-            sesion, grabadora = self.sesion, self.grabadora
+            sesion, grabadora, vivo = self.sesion, self.grabadora, self.vivo
             if not sesion or not grabadora:
                 return None
-            self.sesion = self.grabadora = None
+            self.sesion = self.grabadora = self.vivo = None
         grabadora.detener()
+        if vivo:
+            vivo.detener()
         sesion.errores += grabadora.errores
         sesion.terminar(sesion.tiempo())
         if interrumpida:

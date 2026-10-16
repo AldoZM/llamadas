@@ -7,7 +7,8 @@ Brave (extensión)                         Python (servidor local 127.0.0.1:8765
  • detecta que entraste a la llamada  ──▶  • graba: canal izq = tu micrófono, der = los demás
  • detecta si silencias tu micrófono  ──▶  • silencia tu canal cuando te silencias en la llamada
  • captura la pestaña cada 15 s       ──▶  • guarda capturas (descarta las repetidas)
-                                           • al colgar: transcribe → notas de Obsidian → resumen IA
+                                           • transcribe por tramos con la CPU libre (prioridad mínima)
+                                           • al colgar: último tramo → notas de Obsidian → resumen IA
 ```
 
 ## Instalación
@@ -62,6 +63,9 @@ Llamadas/Reuniones/2026-10-16 1530 Revisión de presupuesto/
 
 ## Ajustes
 Todo está en `config.toml` (vault, modelo de Whisper, intervalo de capturas, umbral de duplicados, modelo de Claude…). El prompt del resumen está en `prompt_analisis.md`: edítalo para cambiar las secciones.
+
+## Velocidad
+Durante la llamada, un proceso aparte va transcribiendo tramos de unos 3 minutos con prioridad mínima (`SCHED_IDLE` en Linux, `IDLE_PRIORITY_CLASS` en Windows): solo usa la CPU que la llamada deja libre, así que no la entorpece. Al colgar solo falta el último tramo, que se transcribe con todos los núcleos, y las notas quedan listas en pocos minutos. Para desactivarlo: `en_vivo = false` en `config.toml`.
 
 ## Consejos
 - **Usa audífonos.** Con bocinas tu micrófono capta a los demás; hay un filtro anti-eco, pero con audífonos el resultado es más limpio.
