@@ -12,7 +12,7 @@ import soundfile as sf
 from faster_whisper import WhisperModel
 
 from .config import Config
-from .sesion import Sesion
+from .sesion import Sesion, hms
 
 log = logging.getLogger(__name__)
 SR_WHISPER = 16000
@@ -53,8 +53,16 @@ def _transcribir_canal(audio: np.ndarray, cfg: Config) -> list[dict]:
         audio, language=cfg.idioma, beam_size=5, vad_filter=True,
         vad_parameters={"min_silence_duration_ms": 500},
         condition_on_previous_text=False)
-    return [{"inicio": round(s.start, 2), "fin": round(s.end, 2), "texto": s.text.strip()}
-            for s in segmentos if s.text.strip()]
+    duracion = len(audio) / SR_WHISPER
+    resultado, siguiente_aviso = [], 10
+    for s in segmentos:
+        if s.text.strip():
+            resultado.append({"inicio": round(s.start, 2), "fin": round(s.end, 2), "texto": s.text.strip()})
+        avance = 100 * s.end / duracion
+        if avance >= siguiente_aviso:
+            log.info("  … %d%% (%s de %s)", avance, hms(s.end), hms(duracion))
+            siguiente_aviso = int(avance // 10 + 1) * 10
+    return resultado
 
 
 def _normalizar(texto: str) -> str:

@@ -1,2 +1,3 @@
 @echo off
-"%~dp0.venv\Scripts\python.exe" -m llamadas %*
+set "PYTHONPATH=%~dp0"
+"%~dp0.venv\Scripts\python.exe" -P -m llamadas %*

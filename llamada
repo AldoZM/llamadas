@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 # Atajo: `llamada <comando>` (ver `llamada --help`).
+# -P + PYTHONPATH: el paquete se carga siempre desde aquí, aunque se ejecute desde otra carpeta
+# (sin -P, ejecutarlo desde ~ confundiría la carpeta ~/llamadas con el paquete).
 DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
-exec "$DIR/.venv/bin/python" -m llamadas "$@"
+PYTHONPATH="$DIR" exec "$DIR/.venv/bin/python" -P -m llamadas "$@"
