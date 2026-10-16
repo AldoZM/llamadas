@@ -1,0 +1,10 @@
+# systemd escucha el puerto y arranca llamadas.service con la primera conexión de la extensión
+# (al entrar a una llamada). El servidor se apaga solo tras 15 min sin actividad.
+[Unit]
+Description=Llamadas: arranque automático al entrar a una llamada
+
+[Socket]
+ListenStream=127.0.0.1:8765
+
+[Install]
+WantedBy=sockets.target

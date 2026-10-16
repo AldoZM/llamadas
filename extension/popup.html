@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <style>
+    :root { color-scheme: light dark; --rojo: #dc2626; --gris: #6b7280; }
+    body { font: 13px system-ui, sans-serif; margin: 0; padding: 14px; width: 260px; }
+    h1 { font-size: 14px; margin: 0 0 10px; display: flex; align-items: center; gap: 6px; }
+    .punto { width: 9px; height: 9px; border-radius: 50%; background: var(--gris); }
+    .punto.rec { background: var(--rojo); animation: latido 1.2s infinite; }
+    @keyframes latido { 50% { opacity: .3; } }
+    dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; margin: 0 0 12px; }
+    dt { color: var(--gris); }
+    dd { margin: 0; overflow-wrap: anywhere; }
+    .error { color: #b45309; margin: 0 0 10px; }
+    button { width: 100%; padding: 7px; border-radius: 6px; border: 1px solid var(--gris);
+             background: transparent; color: inherit; cursor: pointer; }
+    button:hover { border-color: var(--rojo); color: var(--rojo); }
+  </style>
+</head>
+<body>
+  <h1><span id="punto" class="punto"></span><span id="titulo">Llamadas</span></h1>
+  <p id="error" class="error" hidden></p>
+  <dl id="datos"></dl>
+  <button id="detener" hidden>Detener y no grabar esta llamada</button>
+  <script src="popup.js"></script>
+</body>
+</html>

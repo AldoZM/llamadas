@@ -1,0 +1,13 @@
+[Unit]
+Description=Llamadas: grabación y notas de reuniones
+Requires=llamadas.socket
+After=llamadas.socket pipewire.service pipewire-pulse.service
+
+[Service]
+# agy y claude viven en ~/.local/bin, que systemd no incluye por defecto
+Environment=PATH=%h/.local/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=%h/llamadas/llamada servidor
+# Al apagarse por inactividad sale con código 0: no se reinicia hasta la próxima conexión.
+Restart=on-failure
+# Si se detiene a mitad de una llamada, da tiempo a cerrar los archivos de audio.
+TimeoutStopSec=60

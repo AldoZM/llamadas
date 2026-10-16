@@ -1,0 +1,38 @@
+{
+  "manifest_version": 3,
+  "name": "Llamadas",
+  "version": "1.0.0",
+  "description": "Detecta llamadas de Meet, Teams y Zoom (web), el estado de tu micrófono y captura la pestaña para tus notas de Obsidian.",
+  "permissions": [
+    "tabs",
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://meet.google.com/*",
+        "https://teams.microsoft.com/*",
+        "https://teams.live.com/*",
+        "https://teams.cloud.microsoft/*",
+        "https://*.zoom.us/*",
+        "https://*.zoom.com/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "all_frames": true,
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Llamadas"
+  }
+}

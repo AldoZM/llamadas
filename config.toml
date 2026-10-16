@@ -1,0 +1,46 @@
+# Configuración de Llamadas. Los cambios aplican al reiniciar `llamada servidor`.
+
+# Vault de Obsidian y subcarpeta donde se guardan las reuniones.
+vault = "/home/aldo/Documents/Llamadas"
+carpeta = "Reuniones"
+
+# Puerto local donde escucha el servidor (la extensión usa el mismo).
+puerto = 8765
+
+[audio]
+# Grabar tu micrófono en el canal izquierdo. Si es false, solo se graba a los demás.
+grabar_mic = true
+frecuencia = 48000
+# Borrar los .wav temporales una vez creado audio.ogg.
+borrar_wav = true
+
+[capturas]
+# Cada cuántos segundos la extensión captura la pestaña de la llamada.
+intervalo = 15
+# Distancia mínima (hash perceptual) para considerar una captura distinta a la anterior.
+# 0 = guardar todas. Valores típicos: 4-8.
+umbral_duplicado = 6
+
+[transcripcion]
+# Modelos: tiny, base, small, medium, large-v3, large-v3-turbo
+modelo = "large-v3-turbo"
+idioma = "es"
+nombre_yo = "Yo"
+nombre_otros = "Otros"
+
+[analisis]
+activo = true
+# Quién hace el resumen:
+#   "agy"    -> Antigravity CLI de esta PC (sin API key; usa tu sesión de agy)
+#   "claude" -> Claude Code CLI de esta PC (sin API key; usa tu sesión de claude)
+#   "api"    -> API de Claude (requiere ANTHROPIC_API_KEY; se cobra por token)
+motor = "agy"
+# Modelo para agy/claude; vacío = el predeterminado del CLI. Ver `agy models`.
+modelo_cli = ""
+esfuerzo = "high"
+# Tiempo máximo que se espera al CLI.
+limite_minutos = 30
+# Solo para motor = "api":
+modelo = "claude-opus-5-5"
+# Máximo de capturas que se pasan a la IA (se eligen repartidas en el tiempo).
+max_imagenes = 60

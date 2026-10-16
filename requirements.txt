@@ -1,0 +1,9 @@
+anthropic
+fastapi
+uvicorn
+faster-whisper
+imagehash
+numpy
+Pillow
+soundcard
+soundfile

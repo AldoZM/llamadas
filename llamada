@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# Atajo: `llamada <comando>` (ver `llamada --help`).
+DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+exec "$DIR/.venv/bin/python" -m llamadas "$@"
